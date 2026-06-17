@@ -41,6 +41,7 @@ jobs:
         with:
           repository: ZihanType/nix-configs
           token: ${{ secrets.PRIVATE_REPO_ACCESS_TOKEN }}
+          ref: ${{ github.event.client_payload && github.event.client_payload.commit_sha || 'main' }}
 
       # - uses: wimpysworld/nothing-but-nix@v10
 
