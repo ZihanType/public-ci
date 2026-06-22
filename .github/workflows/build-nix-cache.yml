@@ -70,6 +70,7 @@ jobs:
         run: nix flake update
 
       - name: Restore and save Nix store
+        if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.prewarm) }}
         uses: nix-community/cache-nix-action@v7
         with:
           primary-key: nix-${{ github.workflow }}-${{ runner.os }}-${{ hashFiles('flake.lock', '**/*.nix') }}
