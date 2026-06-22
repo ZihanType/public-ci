@@ -54,19 +54,6 @@ jobs:
             extra-substituters = ${{ env.EXTRA_SUBSTITUTERS }}
             extra-trusted-public-keys = ${{ env.EXTRA_TRUSTED_PUBLIC_KEYS }}
 
-      - name: Restore and save Nix store
-        uses: nix-community/cache-nix-action@v7
-        with:
-          primary-key: nix-${{ github.workflow }}-${{ runner.os }}-${{ hashFiles('flake.lock', '**/*.nix') }}
-          restore-prefixes-first-match: |
-            nix-${{ github.workflow }}-${{ runner.os }}-
-          save: true
-          purge: true
-          purge-primary-key: never
-          purge-prefixes: |
-            nix-${{ github.workflow }}-${{ runner.os }}-
-          purge-created: 0
-
       - name: Warn when Cachix token is missing
         if: ${{ env.CACHIX_AUTH_TOKEN == '' }}
         run: echo "::warning::CACHIX_AUTH_TOKEN is not set, skipping Cachix configuration"
@@ -81,6 +68,19 @@ jobs:
       - name: Temporarily update flake.lock for prewarm builds
         if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.prewarm) }}
         run: nix flake update
+
+      - name: Restore and save Nix store
+        uses: nix-community/cache-nix-action@v7
+        with:
+          primary-key: nix-${{ github.workflow }}-${{ runner.os }}-${{ hashFiles('flake.lock', '**/*.nix') }}
+          restore-prefixes-first-match: |
+            nix-${{ github.workflow }}-${{ runner.os }}-
+          save: true
+          purge: true
+          purge-primary-key: never
+          purge-prefixes: |
+            nix-${{ github.workflow }}-${{ runner.os }}-
+          purge-created: 0
 
       - name: Build darwin system
         run: nix build "path:.#darwinConfigurations.Avalon.system"
