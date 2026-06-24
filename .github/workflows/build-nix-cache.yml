@@ -5,6 +5,7 @@ on:
     types: [build-nix-cache]
   schedule:
     - cron: "0 */4 * * *"
+    - cron: "0 2 * * *"
   workflow_dispatch:
     inputs:
       prewarm:
@@ -14,11 +15,12 @@ on:
         default: false
 
 concurrency:
-  group: build-darwin-cache-${{ github.event_name }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.schedule }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   build-macos-cache:
+    if: ${{ github.event_name != 'schedule' || github.event.schedule != '0 2 * * *' }}
     runs-on: macos-26
     permissions:
       actions: write
@@ -73,15 +75,67 @@ jobs:
         if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.prewarm) }}
         uses: nix-community/cache-nix-action@v7
         with:
-          primary-key: nix-${{ github.workflow }}-${{ runner.os }}-${{ hashFiles('flake.lock', '**/*.nix') }}
+          primary-key: ${{ github.workflow }}-${{ runner.os }}-${{ hashFiles('flake.lock', '**/*.nix') }}
           restore-prefixes-first-match: |
-            nix-${{ github.workflow }}-${{ runner.os }}-
+            ${{ github.workflow }}-${{ runner.os }}-
           save: true
           purge: true
           purge-primary-key: never
           purge-prefixes: |
-            nix-${{ github.workflow }}-${{ runner.os }}-
+            ${{ github.workflow }}-${{ runner.os }}-
           purge-created: 0
 
       - name: Build darwin system
         run: nix build "path:.#darwinConfigurations.Avalon.system"
+
+  cleanup-action-cache:
+    if: ${{ github.event_name == 'schedule' && github.event.schedule == '0 2 * * *' }}
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+
+    steps:
+      - name: Delete build-nix-cache action caches
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const prefix = 'build-nix-cache-';
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            let deleted = 0;
+
+            while (true) {
+              const response = await github.request(
+                'GET /repos/{owner}/{repo}/actions/caches',
+                {
+                  owner,
+                  repo,
+                  key: prefix,
+                  per_page: 100,
+                },
+              );
+
+              const caches = (response.data.actions_caches ?? []).filter((cache) =>
+                cache.key.startsWith(prefix),
+              );
+
+              if (caches.length === 0) {
+                break;
+              }
+
+              for (const cache of caches) {
+                core.info(`Deleting cache ${cache.key} (${cache.id})`);
+                await github.request(
+                  'DELETE /repos/{owner}/{repo}/actions/caches/{cache_id}',
+                  {
+                    owner,
+                    repo,
+                    cache_id: cache.id,
+                  },
+                );
+                deleted += 1;
+              }
+            }
+
+            core.info(`Deleted ${deleted} caches with prefix ${prefix}`);
