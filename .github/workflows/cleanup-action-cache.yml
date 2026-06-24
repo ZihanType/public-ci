@@ -1,0 +1,61 @@
+name: cleanup-action-cache
+
+on:
+  schedule:
+    - cron: "0 2 * * *"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cleanup-action-cache:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+
+    steps:
+      - name: Delete build-nix-cache action caches
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const prefix = 'build-nix-cache-';
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            let deleted = 0;
+
+            while (true) {
+              const response = await github.request(
+                'GET /repos/{owner}/{repo}/actions/caches',
+                {
+                  owner,
+                  repo,
+                  key: prefix,
+                  per_page: 100,
+                },
+              );
+
+              const caches = (response.data.actions_caches ?? []).filter((cache) =>
+                cache.key.startsWith(prefix),
+              );
+
+              if (caches.length === 0) {
+                break;
+              }
+
+              for (const cache of caches) {
+                core.info(`Deleting cache ${cache.key} (${cache.id})`);
+                await github.request(
+                  'DELETE /repos/{owner}/{repo}/actions/caches/{cache_id}',
+                  {
+                    owner,
+                    repo,
+                    cache_id: cache.id,
+                  },
+                );
+                deleted += 1;
+              }
+            }
+
+            core.info(`Deleted ${deleted} caches with prefix ${prefix}`);
