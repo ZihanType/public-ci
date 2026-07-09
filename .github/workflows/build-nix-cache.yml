@@ -54,6 +54,10 @@ jobs:
             extra-substituters = ${{ env.EXTRA_SUBSTITUTERS }}
             extra-trusted-public-keys = ${{ env.EXTRA_TRUSTED_PUBLIC_KEYS }}
 
+      - name: Temporarily update flake.lock for prewarm builds
+        if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.prewarm) }}
+        run: nix flake update
+
       - name: Warn when Cachix token is missing
         if: ${{ env.CACHIX_AUTH_TOKEN == '' }}
         run: echo "::warning::CACHIX_AUTH_TOKEN is not set, skipping Cachix configuration"
@@ -64,10 +68,6 @@ jobs:
         with:
           name: zihan-type
           authToken: ${{ env.CACHIX_AUTH_TOKEN }}
-
-      - name: Temporarily update flake.lock for prewarm builds
-        if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.prewarm) }}
-        run: nix flake update
 
       - name: Restore and save Nix store
         if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.prewarm) }}
