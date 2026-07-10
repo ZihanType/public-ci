@@ -69,19 +69,21 @@ jobs:
           name: zihan-type
           authToken: ${{ env.CACHIX_AUTH_TOKEN }}
 
-      - name: Restore and save Nix store
-        if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.prewarm) }}
-        uses: nix-community/cache-nix-action@v7
-        with:
-          primary-key: ${{ github.workflow }}-${{ runner.os }}-${{ hashFiles('flake.lock', '**/*.nix') }}
-          restore-prefixes-first-match: |
-            ${{ github.workflow }}-${{ runner.os }}-
-          save: true
-          purge: true
-          purge-primary-key: never
-          purge-prefixes: |
-            ${{ github.workflow }}-${{ runner.os }}-
-          purge-created: 0
+      # - name: Restore and save Nix store
+      #   if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.prewarm) }}
+      #   uses: nix-community/cache-nix-action@v7
+      #   with:
+      #     primary-key: ${{ github.workflow }}-${{ runner.os }}-${{ hashFiles('flake.lock', '**/*.nix') }}
+      #     restore-prefixes-first-match: |
+      #       ${{ github.workflow }}-${{ runner.os }}-
+      #     save: true
+      #     purge: true
+      #     purge-primary-key: never
+      #     purge-prefixes: |
+      #       ${{ github.workflow }}-${{ runner.os }}-
+      #     purge-created: 0
+
+      - uses: Mic92/hestia@v2
 
       - name: Build darwin system
         run: nix build "path:.#darwinConfigurations.Avalon.system"
