@@ -15,48 +15,75 @@ jobs:
     permissions:
       actions: write
       contents: read
+    env:
+      EXTRA_SUBSTITUTERS: >-
+        https://zihan-type.cachix.org
+        https://cache.numtide.com
+        https://nix-community.cachix.org
+        https://devenv.cachix.org
+      EXTRA_TRUSTED_PUBLIC_KEYS: >-
+        zihan-type.cachix.org-1:Et3+mUASnAGou+mo4Ei1jdQDUWI/UnlF1k3xvxnJzIo=
+        niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g=
+        nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs=
+        devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw=
 
     steps:
-      - name: Delete build-nix-cache action caches
-        uses: actions/github-script@v9
+      # - name: Delete build-nix-cache action caches
+      #   uses: actions/github-script@v9
+      #   with:
+      #     script: |
+      #       const prefix = 'build-nix-cache-';
+      #       const owner = context.repo.owner;
+      #       const repo = context.repo.repo;
+      #       let deleted = 0;
+
+      #       while (true) {
+      #         const response = await github.request(
+      #           'GET /repos/{owner}/{repo}/actions/caches',
+      #           {
+      #             owner,
+      #             repo,
+      #             key: prefix,
+      #             per_page: 100,
+      #           },
+      #         );
+
+      #         const caches = (response.data.actions_caches ?? []).filter((cache) =>
+      #           cache.key.startsWith(prefix),
+      #         );
+
+      #         if (caches.length === 0) {
+      #           break;
+      #         }
+
+      #         for (const cache of caches) {
+      #           core.info(`Deleting cache ${cache.key} (${cache.id})`);
+      #           await github.request(
+      #             'DELETE /repos/{owner}/{repo}/actions/caches/{cache_id}',
+      #             {
+      #               owner,
+      #               repo,
+      #               cache_id: cache.id,
+      #             },
+      #           );
+      #           deleted += 1;
+      #         }
+      #       }
+
+      #       core.info(`Deleted ${deleted} caches with prefix ${prefix}`);
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
         with:
-          script: |
-            const prefix = 'build-nix-cache-';
-            const owner = context.repo.owner;
-            const repo = context.repo.repo;
-            let deleted = 0;
+          extra_nix_config: |
+            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+            extra-substituters = ${{ env.EXTRA_SUBSTITUTERS }}
+            extra-trusted-public-keys = ${{ env.EXTRA_TRUSTED_PUBLIC_KEYS }}
 
-            while (true) {
-              const response = await github.request(
-                'GET /repos/{owner}/{repo}/actions/caches',
-                {
-                  owner,
-                  repo,
-                  key: prefix,
-                  per_page: 100,
-                },
-              );
+      - name: Setup hestia
+        uses: Mic92/hestia@v2
 
-              const caches = (response.data.actions_caches ?? []).filter((cache) =>
-                cache.key.startsWith(prefix),
-              );
-
-              if (caches.length === 0) {
-                break;
-              }
-
-              for (const cache of caches) {
-                core.info(`Deleting cache ${cache.key} (${cache.id})`);
-                await github.request(
-                  'DELETE /repos/{owner}/{repo}/actions/caches/{cache_id}',
-                  {
-                    owner,
-                    repo,
-                    cache_id: cache.id,
-                  },
-                );
-                deleted += 1;
-              }
-            }
-
-            core.info(`Deleted ${deleted} caches with prefix ${prefix}`);
+      - name: Run garbage collection
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: $HESTIA_BIN gc
