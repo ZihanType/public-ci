@@ -72,18 +72,42 @@ jobs:
 
       #       core.info(`Deleted ${deleted} caches with prefix ${prefix}`);
 
-      - name: Install Nix
-        uses: cachix/install-nix-action@v31
+      - name: Delete all action caches
+        uses: actions/github-script@v9
         with:
-          extra_nix_config: |
-            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
-            extra-substituters = ${{ env.EXTRA_SUBSTITUTERS }}
-            extra-trusted-public-keys = ${{ env.EXTRA_TRUSTED_PUBLIC_KEYS }}
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            let deleted = 0;
 
-      - name: Setup hestia
-        uses: Mic92/hestia@v2
+            while (true) {
+              const response = await github.request(
+                'GET /repos/{owner}/{repo}/actions/caches',
+                {
+                  owner,
+                  repo,
+                  per_page: 100,
+                },
+              );
 
-      - name: Run garbage collection
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: $HESTIA_BIN gc
+              const caches = response.data.actions_caches ?? [];
+
+              if (caches.length === 0) {
+                break;
+              }
+
+              for (const cache of caches) {
+                core.info(`Deleting cache ${cache.key} (${cache.id})`);
+                await github.request(
+                  'DELETE /repos/{owner}/{repo}/actions/caches/{cache_id}',
+                  {
+                    owner,
+                    repo,
+                    cache_id: cache.id,
+                  },
+                );
+                deleted += 1;
+              }
+            }
+
+            core.info(`Deleted ${deleted} caches in total`);
