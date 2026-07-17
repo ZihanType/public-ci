@@ -1,0 +1,53 @@
+name: update-chromium-extensions
+
+on:
+  schedule:
+    - cron: "15 1 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  update-chromium-extensions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout private nix-configs repository
+        uses: actions/checkout@v7
+        with:
+          repository: ZihanType/nix-configs
+          token: ${{ secrets.PRIVATE_REPO_ACCESS_TOKEN }}
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update Chromium extensions
+        run: python3 scripts/update-chromium-extensions.py
+
+      - name: Verify Chromium extension sources
+        run: >-
+          nix eval --json
+          "path:.#darwinConfigurations.Avalon.config.home-manager.users.arthur.programs.chromium.extensions"
+          >/dev/null
+
+      - name: Create update pull request
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ secrets.PRIVATE_REPO_ACCESS_TOKEN }}
+          commit-message: "chore(chromium): update extensions"
+          title: "chore(chromium): update extensions"
+          body: |
+            自动下载最新 CRX，并同步不可变下载地址、扩展版本和 SHA-256 哈希。
+
+            此 PR 由 `public-ci` 的 `update-chromium-extensions` 定时任务生成。
+          branch: automation/update-chromium-extensions
+          delete-branch: true
+          add-paths: home/app/chromium-extensions-lock.json
