@@ -50,4 +50,4 @@ jobs:
             此 PR 由 `public-ci` 的 `update-chromium-extensions` 定时任务生成。
           branch: automation/update-chromium-extensions
           delete-branch: true
-          add-paths: home/app/chromium-extensions-lock.json
+          add-paths: home/app/chromium-extensions/extensions-lock.json
