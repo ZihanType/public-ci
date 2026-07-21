@@ -38,16 +38,19 @@ jobs:
           "path:.#darwinConfigurations.Avalon.config.home-manager.users.arthur.programs.chromium.extensions"
           >/dev/null
 
-      - name: Create update pull request
-        uses: peter-evans/create-pull-request@v8
-        with:
-          token: ${{ secrets.PRIVATE_REPO_ACCESS_TOKEN }}
-          commit-message: "chore(chromium): update extensions"
-          title: "chore(chromium): update extensions"
-          body: |
-            自动下载最新 CRX，并同步不可变下载地址、扩展版本和 SHA-256 哈希。
+      - name: Commit and push extension updates
+        run: |
+          lock_file="home/app/chromium-extensions/chromium-extensions-lock.json"
 
-            此 PR 由 `public-ci` 的 `update-chromium-extensions` 定时任务生成。
-          branch: automation/update-chromium-extensions
-          delete-branch: true
-          add-paths: home/app/chromium-extensions/extensions-lock.json
+          if git diff --quiet -- "$lock_file"; then
+            echo "No extension updates"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email \
+            "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add "$lock_file"
+          git commit -m "chore(chromium): update extensions"
+          git push origin HEAD:main
