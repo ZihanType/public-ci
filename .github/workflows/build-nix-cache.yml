@@ -84,7 +84,7 @@ jobs:
       #       ${{ github.workflow }}-${{ runner.os }}-
       #     purge-created: 0
 
-      - uses: Mic92/hestia@v2
+      - uses: Mic92/hestia@v3
 
       - name: Build darwin system
         run: nix build "path:.#darwinConfigurations.Avalon.system"
