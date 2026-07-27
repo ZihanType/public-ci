@@ -54,8 +54,8 @@ jobs:
             extra-substituters = ${{ env.EXTRA_SUBSTITUTERS }}
             extra-trusted-public-keys = ${{ env.EXTRA_TRUSTED_PUBLIC_KEYS }}
 
-      - name: Temporarily update flake.lock for prewarm builds
-        if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.prewarm) }}
+      - name: Temporarily update flake.lock for manual prewarm builds
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.prewarm }}
         run: nix flake update
 
       - name: Warn when Cachix token is missing
