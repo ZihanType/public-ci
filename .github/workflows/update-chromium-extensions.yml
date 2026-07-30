@@ -40,7 +40,7 @@ jobs:
 
       - name: Commit and push extension updates
         run: |
-          lock_file="home/app/chromium-extensions/chromium-extensions-lock.json"
+          lock_file="home/app/chromium-extensions/extensions-lock.json"
 
           if git diff --quiet -- "$lock_file"; then
             echo "No extension updates"
