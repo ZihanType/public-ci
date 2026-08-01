@@ -37,12 +37,9 @@ jobs:
           - name: nixos-world
             runner: ubuntu-24.04-arm
             target: path:.#nixosConfigurations.nixos-world.config.system.build.toplevel
-          - name: wangzihan
+          - name: work-ubuntu
             runner: ubuntu-24.04
-            target: path:.#homeConfigurations.wangzihan.activationPackage
-          - name: system-default
-            runner: ubuntu-24.04
-            target: path:.#systemConfigs.default
+            target: path:.#systemConfigs.work-ubuntu
     env:
       CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
       EXTRA_SUBSTITUTERS: >-
