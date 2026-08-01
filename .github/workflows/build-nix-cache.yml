@@ -35,10 +35,10 @@ jobs:
             runner: macos-26
             target: path:.#darwinConfigurations.Avalon.system
           - name: nixos-world
-            runner: ubuntu-24.04-arm
+            runner: ubuntu-26.04-arm
             target: path:.#nixosConfigurations.nixos-world.config.system.build.toplevel
           - name: work-ubuntu
-            runner: ubuntu-24.04
+            runner: ubuntu-22.04
             target: path:.#systemConfigs.work-ubuntu
     env:
       CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
