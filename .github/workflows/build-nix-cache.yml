@@ -34,9 +34,9 @@ jobs:
           - name: Avalon
             runner: macos-26
             target: path:.#darwinConfigurations.Avalon.system
-          - name: nixos-world
-            runner: ubuntu-26.04-arm
-            target: path:.#nixosConfigurations.nixos-world.config.system.build.toplevel
+          # - name: nixos-world
+          #   runner: ubuntu-26.04-arm
+          #   target: path:.#nixosConfigurations.nixos-world.config.system.build.toplevel
           - name: work-ubuntu
             runner: ubuntu-22.04
             target: path:.#systemConfigs.work-ubuntu
