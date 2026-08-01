@@ -1,4 +1,6 @@
 name: build-nix-cache
+run-name: >-
+  build-nix-cache source-run=${{ github.event.client_payload.source_run_id || 'manual' }}.${{ github.event.client_payload.source_run_attempt || '0' }} sha=${{ github.event.client_payload.commit_sha || github.sha }}
 
 on:
   repository_dispatch:
@@ -14,15 +16,33 @@ on:
         default: false
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: >-
+    ${{ github.workflow }}-${{ github.event.client_payload.source_run_id || github.run_id }}-${{ github.event.client_payload.source_run_attempt || github.run_attempt }}
+  cancel-in-progress: false
 
 jobs:
-  build-macos-cache:
-    runs-on: macos-26
+  build-cache:
+    name: Build ${{ matrix.name }}
+    runs-on: ${{ matrix.runner }}
     permissions:
       actions: write
       contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Avalon
+            runner: macos-26
+            target: path:.#darwinConfigurations.Avalon.system
+          - name: nixos-world
+            runner: ubuntu-24.04-arm
+            target: path:.#nixosConfigurations.nixos-world.config.system.build.toplevel
+          - name: wangzihan
+            runner: ubuntu-24.04
+            target: path:.#homeConfigurations.wangzihan.activationPackage
+          - name: system-default
+            runner: ubuntu-24.04
+            target: path:.#systemConfigs.default
     env:
       CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
       EXTRA_SUBSTITUTERS: >-
@@ -86,5 +106,5 @@ jobs:
 
       - uses: Mic92/hestia@v3
 
-      - name: Build darwin system
-        run: nix build "path:.#darwinConfigurations.Avalon.system"
+      - name: Build ${{ matrix.name }}
+        run: nix build "${{ matrix.target }}"
