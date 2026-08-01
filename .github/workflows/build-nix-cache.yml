@@ -17,8 +17,8 @@ on:
 
 concurrency:
   group: >-
-    ${{ github.workflow }}-${{ github.event.client_payload.source_run_id || github.run_id }}-${{ github.event.client_payload.source_run_attempt || github.run_attempt }}
-  cancel-in-progress: false
+    ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.client_payload.source_run_id || github.ref }}-${{ github.event.client_payload.source_run_attempt || '0' }}
+  cancel-in-progress: true
 
 jobs:
   build-cache:
