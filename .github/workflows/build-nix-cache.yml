@@ -146,6 +146,7 @@ jobs:
         with:
           primary-key: ${{ github.workflow }}-${{ matrix.name }}-${{ hashFiles('flake.lock', '**/*.nix') }}
           restore-prefixes-first-match: ${{ github.workflow }}-${{ matrix.name }}-
+          save: false
 
       - name: Build work-ubuntu as the existing work user
         run: ./tests/work-ubuntu/build-as-user.sh "${GITHUB_WORKSPACE}"
