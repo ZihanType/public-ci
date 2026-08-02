@@ -70,6 +70,8 @@ jobs:
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
             extra-substituters = ${{ env.EXTRA_SUBSTITUTERS }}
             extra-trusted-public-keys = ${{ env.EXTRA_TRUSTED_PUBLIC_KEYS }}
+            keep-derivations = true
+            keep-outputs = true
 
       - name: Temporarily update flake.lock for prewarm builds
         if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.prewarm) }}
@@ -81,6 +83,7 @@ jobs:
           primary-key: ${{ github.workflow }}-${{ matrix.name }}-${{ hashFiles('flake.lock', '**/*.nix') }}
           restore-prefixes-first-match: ${{ github.workflow }}-${{ matrix.name }}-
           save: true
+          gc-max-store-size: 1G
           purge: true
           purge-primary-key: never
           purge-prefixes: ${{ github.workflow }}-${{ matrix.name }}-
