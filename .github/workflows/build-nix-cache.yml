@@ -75,10 +75,6 @@ jobs:
         if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.prewarm) }}
         run: nix flake update
 
-      - name: Warn when Cachix token is missing
-        if: ${{ env.CACHIX_AUTH_TOKEN == '' }}
-        run: echo "::warning::CACHIX_AUTH_TOKEN is not set, skipping Cachix configuration"
-
       - name: Restore and save Nix store
         uses: nix-community/cache-nix-action@v7
         with:
@@ -91,6 +87,10 @@ jobs:
           purge-prefixes: |
             ${{ github.workflow }}-${{ matrix.name }}-
           purge-created: 0
+
+      - name: Warn when Cachix token is missing
+        if: ${{ env.CACHIX_AUTH_TOKEN == '' }}
+        run: echo "::warning::CACHIX_AUTH_TOKEN is not set, skipping Cachix configuration"
 
       - name: Configure Cachix
         if: ${{ env.CACHIX_AUTH_TOKEN != '' }}
