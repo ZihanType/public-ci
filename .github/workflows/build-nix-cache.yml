@@ -79,13 +79,11 @@ jobs:
         uses: nix-community/cache-nix-action@v7
         with:
           primary-key: ${{ github.workflow }}-${{ matrix.name }}-${{ hashFiles('flake.lock', '**/*.nix') }}
-          restore-prefixes-first-match: |
-            ${{ github.workflow }}-${{ matrix.name }}-
+          restore-prefixes-first-match: ${{ github.workflow }}-${{ matrix.name }}-
           save: true
           purge: true
           purge-primary-key: never
-          purge-prefixes: |
-            ${{ github.workflow }}-${{ matrix.name }}-
+          purge-prefixes: ${{ github.workflow }}-${{ matrix.name }}-
           purge-created: 0
 
       - name: Warn when Cachix token is missing
@@ -142,6 +140,12 @@ jobs:
       - name: Temporarily update flake.lock for prewarm tests
         if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.prewarm) }}
         run: nix flake update
+
+      - name: Restore Nix store
+        uses: nix-community/cache-nix-action@v7
+        with:
+          primary-key: ${{ github.workflow }}-${{ matrix.name }}-${{ hashFiles('flake.lock', '**/*.nix') }}
+          restore-prefixes-first-match: ${{ github.workflow }}-${{ matrix.name }}-
 
       - name: Build work-ubuntu as the existing work user
         run: ./tests/work-ubuntu/build-as-user.sh "${GITHUB_WORKSPACE}"
