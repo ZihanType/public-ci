@@ -147,8 +147,8 @@ jobs:
       - name: Restore Nix store
         uses: nix-community/cache-nix-action@v7
         with:
-          primary-key: ${{ github.workflow }}-${{ matrix.name }}-${{ hashFiles('flake.lock', '**/*.nix') }}
-          restore-prefixes-first-match: ${{ github.workflow }}-${{ matrix.name }}-
+          primary-key: ${{ github.workflow }}-work-ubuntu-${{ hashFiles('flake.lock', '**/*.nix') }}
+          restore-prefixes-first-match: ${{ github.workflow }}-work-ubuntu-
           save: false
 
       - name: Build work-ubuntu as the existing work user
