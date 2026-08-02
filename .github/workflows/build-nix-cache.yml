@@ -134,7 +134,7 @@ jobs:
         with:
           extra_nix_config: |
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
-            experimental-features = nix-command flakes auto-allocate-uids
+            experimental-features = nix-command flakes auto-allocate-uids cgroups
             auto-allocate-uids = true
             extra-substituters = ${{ env.EXTRA_SUBSTITUTERS }}
             extra-trusted-public-keys = ${{ env.EXTRA_TRUSTED_PUBLIC_KEYS }}
