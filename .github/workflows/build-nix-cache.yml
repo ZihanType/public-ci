@@ -17,7 +17,7 @@ on:
 
 concurrency:
   group: >-
-    ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.client_payload.source_run_id || github.ref }}-${{ github.event.client_payload.source_run_attempt || '0' }}
+    ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.client_payload.source_run_id || github.ref }}
   cancel-in-progress: true
 
 jobs:
