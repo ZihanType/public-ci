@@ -91,17 +91,15 @@ jobs:
         if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.prewarm) }}
         uses: nix-community/cache-nix-action@v7
         with:
-          primary-key: ${{ github.workflow }}-${{ runner.os }}-${{ hashFiles('flake.lock', '**/*.nix') }}
+          primary-key: ${{ github.workflow }}-${{ matrix.name }}-${{ hashFiles('flake.lock', '**/*.nix') }}
           restore-prefixes-first-match: |
-            ${{ github.workflow }}-${{ runner.os }}-
+            ${{ github.workflow }}-${{ matrix.name }}-
           save: true
           purge: true
           purge-primary-key: never
           purge-prefixes: |
-            ${{ github.workflow }}-${{ runner.os }}-
+            ${{ github.workflow }}-${{ matrix.name }}-
           purge-created: 0
-
-      # - uses: Mic92/hestia@v3
 
       - name: Build ${{ matrix.name }}
         run: nix build "${{ matrix.target }}"
